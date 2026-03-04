@@ -7,7 +7,10 @@ public partial class MyDummyDatabase(ILogger<MyDummyDatabase> logger)
     private readonly ILogger<MyDummyDatabase> _logger = logger;
 
     private readonly ConcurrentDictionary<long, FixturePayload> _fixtures = new();
-    private readonly ConcurrentDictionary<(long FixtureId, long CustomerId, string OutcomeKey, decimal Stake, decimal Odds), BetPlacedPayload> _placedBets = new();
+
+    // Not sure if this is necessary, as we could just save the totalStandToWin for each customer as a calculated runtime value. 
+    // The API contract only demands the total potential payout for a given customer, so we don't necessarily need to store all the bets, but it could be useful for future features and it's not too expensive to store them in memory for the sake of this challenge.
+    private readonly ConcurrentDictionary<BetPlacedPayload, BetPlacedPayload> _placedBets = new();
 
     public IReadOnlyCollection<FixturePayload> Fixtures => [.. _fixtures.Values];
     public IReadOnlyCollection<BetPlacedPayload> PlacedBets => [.. _placedBets.Values];
@@ -15,24 +18,24 @@ public partial class MyDummyDatabase(ILogger<MyDummyDatabase> logger)
     {
         if (_fixtures.TryAdd(fixture.Id, fixture))
         {
-            LogFixtureAdded(fixture.Id);
+            LogFixtureAdded(_logger, fixture.Id);
         }
         else
         {
-            LogFixtureAlreadyExists(fixture.Id);
+            LogFixtureAlreadyExists(_logger, fixture.Id);
         }
     }
 
     public void AddBet(BetPlacedPayload bet)
     {
-        var key = (bet.FixtureId, bet.CustomerId, bet.OutcomeKey, bet.Stake, bet.Odds);
+        var key = bet;
         if(_placedBets.TryAdd(key, bet))
         {
-            LogBetAdded(bet.FixtureId, bet.OutcomeKey, bet.Stake, bet.Odds);
+            LogBetAdded(_logger, bet.FixtureId, bet.OutcomeKey, bet.Stake, bet.Odds);
         }
         else
         {
-            LogBetAlreadyExists(bet.FixtureId, bet.OutcomeKey, bet.Stake, bet.Odds);
+            LogBetAlreadyExists(_logger, bet.FixtureId, bet.OutcomeKey, bet.Stake, bet.Odds);
         }
     }
 
@@ -48,16 +51,16 @@ public partial class MyDummyDatabase(ILogger<MyDummyDatabase> logger)
         _placedBets.Clear();
     }
 
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Fixture with id {FixtureId} added to database")]
-    private partial void LogFixtureAdded(long fixtureId);
+    // In production this should be a separate service class or static helper class, but for the sake of this challenge we can keep it here in the database class.
+    [LoggerMessage( Level = LogLevel.Debug, Message = "Fixture with id {FixtureId} added to database")]
+    private static partial void LogFixtureAdded(ILogger logger, long fixtureId);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Fixture with id {FixtureId} already exists in database")]
-    private partial void LogFixtureAlreadyExists(long fixtureId);
+    private static partial void LogFixtureAlreadyExists(ILogger logger, long fixtureId);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Bet on fixture {FixtureId} for outcome {OutcomeKey} with stake {Stake} and odds {Odds} already exists in database")]
-    private partial void LogBetAlreadyExists(long fixtureId, string outcomeKey, decimal stake, decimal odds);
+    private static partial void LogBetAlreadyExists(ILogger logger, long fixtureId, string outcomeKey, decimal stake, decimal odds);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Bet placed on fixture {FixtureId} for outcome {OutcomeKey} with stake {Stake} and odds {Odds} added to database")]
-    private partial void LogBetAdded(long fixtureId, string outcomeKey, decimal stake, decimal odds);
+    private static partial void LogBetAdded(ILogger logger, long fixtureId, string outcomeKey, decimal stake, decimal odds);
 }

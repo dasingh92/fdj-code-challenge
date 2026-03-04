@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Text.Json;
 using FdjCodeChallenge.Api.Database;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FdjCodeChallenge.Api.Controllers;
 
@@ -17,8 +19,9 @@ public static class CustomerControllerEndpoints
             .Produces(StatusCodes.Status404NotFound);
     }
 
-    private static async Task<IResult> GetCustomerStats(long customerId, HttpContext context, HttpClient httpClient, IConfiguration configuration, MyDummyDatabase database)
+    private static async Task<IResult> GetCustomerStats([FromRoute]long customerId, HttpContext context, HttpClient httpClient, IConfiguration configuration, MyDummyDatabase database, ILogger logger)
     {
+        var stopwatch = Stopwatch.StartNew();
         var checkIfCustomerExists = database.PlacedBets.Any(bet => bet.CustomerId == customerId);
         if (!checkIfCustomerExists)
         {
@@ -41,6 +44,9 @@ public static class CustomerControllerEndpoints
         var totalStandToWin = database.PlacedBets
             .Where(bet => bet.CustomerId == customerId)
             .Sum(bet => bet.PotentialPayout);
+#pragma warning disable CA1873 // Avoid potentially expensive logging
+        logger.LogInformation("Retrieved stats for customer {CustomerId} in {ElapsedMilliseconds} ms", customerId, stopwatch.ElapsedMilliseconds);
+#pragma warning restore CA1873 // Avoid potentially expensive logging
         return httpResponseMessage.IsSuccessStatusCode
             ? Results.Ok(new CustomerStatsResponse(customerId, customerName, totalStandToWin))
             : Results.NotFound();
