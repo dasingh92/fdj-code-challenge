@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Concurrent;
 using FdjCodeChallenge.Api.Models;
-using Microsoft.Extensions.Logging;
 namespace FdjCodeChallenge.Api.Database;
 
 public partial class MyDummyDatabase(ILogger<MyDummyDatabase> logger)

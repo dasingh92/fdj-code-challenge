@@ -1,9 +1,5 @@
-using System;
 using System.Text.Json;
 using FdjCodeChallenge.Api.Database;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace FdjCodeChallenge.Api.Controllers;
 

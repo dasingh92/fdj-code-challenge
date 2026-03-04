@@ -1,5 +1,3 @@
-using System;
-
 namespace FdjCodeChallenge.Api.Utilities;
 
 public class ConfigurationSingleton
