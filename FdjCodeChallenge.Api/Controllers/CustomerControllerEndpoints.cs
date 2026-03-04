@@ -39,11 +39,11 @@ public static class CustomerControllerEndpoints
         var customerName = customerDetails.CustomerName;
         var totalStandToWin = database.PlacedBets
             .Where(bet => bet.CustomerId == customerId)
-            .Sum(bet => bet.PotentialPayout);
+            .Sum(bet => bet.StandToWin);
 #pragma warning disable CA1873 // Avoid potentially expensive logging
         logger.LogInformation("Retrieved stats for customer {CustomerId} in {ElapsedMilliseconds} ms", customerId, stopwatch.ElapsedMilliseconds);
 #pragma warning restore CA1873 // Avoid potentially expensive logging
-        return Results.Ok(new CustomerStatsResponse(customerId, customerName, totalStandToWin, stopwatch.ElapsedMilliseconds));
+        return Results.Ok(new CustomerStatsResponse(customerId, customerName, totalStandToWin));
     }
 
     private static async Task<CustomerDetailsResponse?> GetCustomerDetails(long customerId, HttpClient httpClient, IConfiguration configuration, ILogger logger)
@@ -52,6 +52,7 @@ public static class CustomerControllerEndpoints
         {
             return cachedCustomerDetails;
         }
+        // Both the Endpoint and candidateId can be moved to a singleton class holds all values associated to the External API configuration, but for the sake of this challenge we can just retrieve them from the configuration directly in this method.
         var customerNameEndpoint = configuration.GetValue<string>("CustomerDetailsApiEndpoint") ?? throw new NullReferenceException("CustomerDetailsApiEndpoint configuration value is missing");
         var candidateId = configuration.GetValue<string>("CandidateId") ?? throw new NullReferenceException("CandidateId configuration value is missing");
         httpClient.BaseAddress = new Uri(customerNameEndpoint);
@@ -68,7 +69,7 @@ public static class CustomerControllerEndpoints
         return customerDetails;
     }
 
-    public record CustomerStatsResponse(long CustomerId, string Name, decimal TotalStandToWin, long millisecondsToRetrieve);
+    public record CustomerStatsResponse(long CustomerId, string Name, decimal TotalStandToWin);
 }
 
 internal record CustomerDetailsResponse
