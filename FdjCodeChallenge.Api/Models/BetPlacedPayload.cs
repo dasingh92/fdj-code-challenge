@@ -8,5 +8,7 @@ public record BetPlacedPayload
     public decimal Odds { get; init; }
     public decimal Stake { get; init; }
 
-    public decimal PotentialPayout => Stake * Odds;
+    // Payout = Stake × Odds (total returned by house)
+    // StandToWin = Payout - Stake = net profit/gain if bet wins
+    public decimal StandToWin => Stake * Odds - Stake;
 }

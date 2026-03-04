@@ -31,7 +31,7 @@ public partial class MyDummyDatabase(ILogger<MyDummyDatabase> logger)
         var key = bet;
         if(_placedBets.TryAdd(key, bet))
         {
-            LogBetAdded(_logger, bet.FixtureId, bet.OutcomeKey, bet.Stake, bet.Odds);
+            LogBetAdded(_logger, bet.FixtureId, bet.OutcomeKey, bet.Stake, bet.Odds, bet.StandToWin);
         }
         else
         {
@@ -61,6 +61,6 @@ public partial class MyDummyDatabase(ILogger<MyDummyDatabase> logger)
     [LoggerMessage(Level = LogLevel.Warning, Message = "Bet on fixture {FixtureId} for outcome {OutcomeKey} with stake {Stake} and odds {Odds} already exists in database")]
     private static partial void LogBetAlreadyExists(ILogger logger, long fixtureId, string outcomeKey, decimal stake, decimal odds);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Bet placed on fixture {FixtureId} for outcome {OutcomeKey} with stake {Stake} and odds {Odds} added to database")]
-    private static partial void LogBetAdded(ILogger logger, long fixtureId, string outcomeKey, decimal stake, decimal odds);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Bet placed on fixture {FixtureId} for outcome {OutcomeKey} with stake {Stake} and odds {Odds} (stand to win: {StandToWin}) added to database")]
+    private static partial void LogBetAdded(ILogger logger, long fixtureId, string outcomeKey, decimal stake, decimal odds, decimal standToWin);
 }

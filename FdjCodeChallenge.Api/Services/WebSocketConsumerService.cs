@@ -60,6 +60,7 @@ public class WebSocketConsumerService(ILogger<WebSocketConsumerService> logger, 
 
     private async Task ReadSingleMessageFromWebSocketAsync(ClientWebSocket ws, CancellationToken stoppingToken)
     {
+        // Note: In production, we should handle the case where messages are larger than the buffer size and need to be read in multiple chunks. For the sake of this challenge, we can assume that messages will fit in the buffer.
         var buffer = new byte[1024];
         var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), stoppingToken);
         if (result.MessageType == WebSocketMessageType.Close)
@@ -69,6 +70,7 @@ public class WebSocketConsumerService(ILogger<WebSocketConsumerService> logger, 
         }
         else if (result.MessageType == WebSocketMessageType.Text)
         {
+            // Using UTF-8 as the requirements specify UTF-8 serialized strings.
             var message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
             _logger.LogInformation("Received message: {Message}", message);
             // Process the message as needed
@@ -107,9 +109,10 @@ public class WebSocketConsumerService(ILogger<WebSocketConsumerService> logger, 
                         _logger.LogInformation("Received EndOfFeed message");
                         // Close the WebSocket connection gracefully.
                         await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "End of feed received", stoppingToken);
+                        _database.Clear();
                         break;
                     default:
-                        _logger.LogWarning("Received message with unknown type: {MessageType}", baseMessage.Type);
+                        _logger.LogError("Received message with unknown type: {MessageType}", baseMessage.Type);
                         break;
                 }
             }
