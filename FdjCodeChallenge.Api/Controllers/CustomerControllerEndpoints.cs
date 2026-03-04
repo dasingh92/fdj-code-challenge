@@ -19,8 +19,9 @@ public static class CustomerControllerEndpoints
             .Produces(StatusCodes.Status404NotFound);
     }
 
-    private static async Task<IResult> GetCustomerStats([FromRoute]long customerId, HttpContext context, HttpClient httpClient, IConfiguration configuration, MyDummyDatabase database, ILogger logger)
+    private static async Task<IResult> GetCustomerStats(long customerId, HttpContext context, HttpClient httpClient, IConfiguration configuration, MyDummyDatabase database, ILoggerFactory loggerFactory)
     {
+        var logger = loggerFactory.CreateLogger("CustomerControllerEndpoints");
         var stopwatch = Stopwatch.StartNew();
         var checkIfCustomerExists = database.PlacedBets.Any(bet => bet.CustomerId == customerId);
         if (!checkIfCustomerExists)
